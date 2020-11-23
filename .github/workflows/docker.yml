@@ -104,7 +104,7 @@ jobs:
         name: Generate caches
         id: caches
         run: |
-          caches=$(find "$CACHE_BASE_PATH" -mindepth 1 -maxdepth 1 -type d -printf '"type=local,src=%p\n"')
+          caches=$(find "$CACHE_BASE_PATH" -mindepth 1 -maxdepth 1 -type d -printf 'type=local,src=%p\n')
           echo "::set-output name=caches::${caches//$'\n'/'%0A'}"
       -
         name: Build image
