@@ -1,6 +1,7 @@
 name: Build Docker image
 
 on:
+  workflow_dispatch:
   push:
     branches: main
 
@@ -15,7 +16,8 @@ env:
       "linux/ppc64le",
       "linux/s390x"
     ]
-  CACHE_BASE_PATH: '/tmp/.buildx'
+  CACHE_REPO: "alnmawi/build-cache"
+  DOCKERHUB_REPO: "alnmawi/python2"
 
 jobs:
   get-platforms:
@@ -35,21 +37,14 @@ jobs:
     strategy:
       matrix:
         platform: ${{ fromJSON(needs.get-platforms.outputs.platforms) }}
-    outputs:
-      artifact: ${{ steps.names.outputs.artifact }}
-      cache-path: ${{ steps.names.outputs.cache-path }}
     steps:
       -
-        name: Generate names
-        id: names
+        name: Generate cache
+        id: cache
         env:
-          platform: ${{ matrix.platform }}
+          PLATFORM: ${{ matrix.platform }}
         run: |
-          platform="${platform////-}"
-          artifact="cache-$platform"
-          echo "::set-output name=platform::$platform"
-          echo "::set-output name=artifact::$artifact"
-          echo "::set-output name=cache-path::$CACHE_BASE_PATH/$artifact"
+          echo "::set-output name=cache::${CACHE_REPO}:${DOCKERHUB_REPO////-}-${PLATFORM////-}"
       -
         name: Checkout
         uses: actions/checkout@v2
@@ -62,22 +57,36 @@ jobs:
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
       -
+        name: Login to Docker Hub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      -
         name: Build image
         uses: docker/build-push-action@v2
         with:
           platforms: ${{ matrix.platform }}
-          cache-to: type=local,dest=${{ steps.names.outputs.cache-path }},mode=max
-      -
-        name: Upload cache
-        uses: actions/upload-artifact@v2
-        with:
-          name: ${{ steps.names.outputs.artifact }}
-          path: ${{ steps.names.outputs.cache-path }}
+          cache-from: type=registry,ref=${{ steps.cache.outputs.cache }}
+          cache-to: type=registry,ref=${{ steps.cache.outputs.cache }},mode=max
 
   publish:
     needs: [get-platforms, build]
     runs-on: ubuntu-latest
     steps:
+      -
+        name: Generate caches
+        id: caches
+        run: |
+          for platform in ${{ join(fromJSON(needs.get-platforms.outputs.platforms), ' ') }}; do
+            cache="type=registry,ref=${CACHE_REPO}:${DOCKERHUB_REPO////-}-${platform////-}"
+            if [ -z "${caches}" ]; then
+              caches="${cache}"
+            else
+              caches="${caches}"$'\n'"${cache}"
+            fi
+          done
+          echo "::set-output name=caches::${caches//$'\n'/'%0A'}"
       -
         name: Checkout
         uses: actions/checkout@v2
@@ -96,21 +105,10 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       -
-        name: Download caches
-        uses: actions/download-artifact@v2
-        with:
-          path: ${{ env.CACHE_BASE_PATH }}
-      -
-        name: Generate caches
-        id: caches
-        run: |
-          caches=$(find "$CACHE_BASE_PATH" -mindepth 1 -maxdepth 1 -type d -printf 'type=local,src=%p\n')
-          echo "::set-output name=caches::${caches//$'\n'/'%0A'}"
-      -
-        name: Build image
+        name: Publish images
         uses: docker/build-push-action@v2
         with:
           platforms: ${{ join(fromJSON(needs.get-platforms.outputs.platforms), ',') }}
           cache-from: ${{ steps.caches.outputs.caches }}
           push: true
-          tags: alnmawi/python2:latest
+          tags: ${{ env.DOCKERHUB_REPO }}:latest
