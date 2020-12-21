@@ -46,9 +46,9 @@ RUN set -ex \
 &&  wget -qO python.tar.xz.asc "https://www.python.org/ftp/python/${PYTHON_VERSION%%[a-z]*}/Python-$PYTHON_VERSION.tar.xz.asc" \
 &&  gpg --batch --keyserver ha.pool.sks-keyservers.net --recv-keys "$PYTHON_GPG_KEY" \
 &&  gpg --batch --verify python.tar.xz.asc python.tar.xz \
-&&  rm -rf "$GNUPGHOME" python.tar.xz.asc \
 # - integrity check cleanup
 &&  { command -v gpgconf >/dev/null && gpgconf --kill all || true; } \
+&&  rm -rf "$GNUPGHOME" python.tar.xz.asc \
 &&  unset -v GNUPGHOME \
 \
 # unpack sources
