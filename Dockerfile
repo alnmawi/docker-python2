@@ -2,10 +2,10 @@ ARG PYTHON_VERSION=2.7.18
 # https://www.python.org/dev/peps/pep-0373/#release-manager-and-crew
 ARG PYTHON_GPG_KEY=C01E1CAD5EA2C4F0B8E3571504C367C218ADD4FF
 
-ARG PYTHON_PIP_VERSION=20.2.4
+ARG PYTHON_PIP_VERSION=20.3.3
 # https://github.com/pypa/get-pip
-ARG PYTHON_GET_PIP_URL=https://raw.githubusercontent.com/pypa/get-pip/8283828b8fd6f1783daf55a765384e6d8d2c5014/get-pip.py
-ARG PYTHON_GET_PIP_SHA256=2250ab0a7e70f6fd22b955493f7f5cf1ea53e70b584a84a32573644a045b4bfb
+ARG PYTHON_GET_PIP_URL=https://raw.githubusercontent.com/pypa/get-pip/20.3.3/get-pip.py
+ARG PYTHON_GET_PIP_SHA256=6a0b13826862f33c13b614a921d36253bfa1ae779c5fbf569876f3585057e9d2
 
 
 FROM alpine:3.12.3
