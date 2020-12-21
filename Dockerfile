@@ -77,7 +77,7 @@ RUN set -ex \
         zlib-dev \
 \
 # remove fetch dependencies _after_ adding build dependencies in case there's overlap
-&&  apk del .fetch-deps \
+&&  apk del --no-cache .fetch-deps \
 # - pinentry link is left dangling after fetch dependencies removal
 &&  rm -f /usr/bin/pinentry \
 \
@@ -183,7 +183,7 @@ RUN set -ex \
 |   xargs -rt apk add --no-cache --virtual .python-rundeps \
 \
 # remove build dependencies
-&&  apk del .build-deps \
+&&  apk del --no-cache .build-deps \
 \
 # remove build directory
 &&  cd /tmp \
