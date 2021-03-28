@@ -8,7 +8,7 @@ ARG PYTHON_GET_PIP_URL=https://raw.githubusercontent.com/pypa/get-pip/20.3.3/get
 ARG PYTHON_GET_PIP_SHA256=6a0b13826862f33c13b614a921d36253bfa1ae779c5fbf569876f3585057e9d2
 
 
-FROM alpine:3.13.2
+FROM alpine:3.13.3
 
 
 ARG PYTHON_VERSION
